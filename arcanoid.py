@@ -1,4 +1,5 @@
 import pgzrun
+from pgzero import clock, music
 import pygame
 import random
 
@@ -8,7 +9,9 @@ import random
 # paddle.pos = (WIDTH/2, HEIGHT - paddle.height)
 # # Position obstacle randomly on the top of the screen.
 # obstacle.pos = (random.randint(0,WIDTH), 0)
-WIDTH = 500
+
+# define constant
+WIDTH = 600
 HEIGHT = 500
 HEART_RADIUS = 20
 lives = 3
@@ -42,6 +45,11 @@ class Ball:
         #     if touch(self, obstacle):
         #         obstacles.remove(obstacle)
         #         self.vel[1] = -self.vel[1]
+        #         obstacle.damage -= 1
+        #         if obstacle.damage == 0:
+        #             obstacles.remove(obstacle)
+        #             self.increase_velocity()
+
         self.collide()
         self.touch_element()
 
@@ -66,6 +74,26 @@ class Ball:
                 self.pos[0] = paddle.pos[0] + paddle.size[1] / 2
             self.vel[1] = -self.vel[1]
 
+    # def move(self):
+    #     if self.pos[0] + self.radius / 2 >= WIDTH:
+    #         self.vel[0] *= -1
+    #
+    #     if self.pos[1] - self.radius / 2 <= 0:
+    #         self.vel[1] = 3
+    #
+    #     if self.pos[0] - self.radius / 2 <= 0:
+    #         self.vel[0] = 3
+    #
+    #     if self.pos[1] + self.radius >= paddle.pos[1] and paddle.pos[0] <= self.pos[0] + self.radius / 2 <= paddle.pos[0] + paddle.size[0]:
+    #         self.vel[1] = -3
+    #
+    #     if lives != 0 and obstacles != 0:
+    #         self.pos[0] += self.vel[0]
+    #         self.pos[1] += self.vel[1]
+    #     else:
+    #         self.pos[0] = -10
+    #         self.pos[1] = -10
+
     def touch_element(self):
         for obstacle in obstacles:
             if obstacle.y - obstacle.radius <= self.pos[1] - self.radius <= obstacle.y + obstacle.radius and \
@@ -78,17 +106,6 @@ class Ball:
                 obstacle.damage -= 1
             if obstacle.damage == 0:
                 obstacles.remove(obstacle)
-                self.increase_velocity()
-
-    def increase_velocity(self):
-        #increases velocity of the ball with each obstacle removed.
-        if len(obstacles) >= 0:
-            self.vel[0] = self.vel[0] * 1.05
-            self.vel[1] = self.vel[1] * 1.05
-            if self.vel[0] > 4:
-                self.vel[0] = 4
-            if self.vel[1] > 4:
-                self.vel[1] = 4
 
     def draw(self):
         screen.draw.filled_circle(self.pos, self.radius, "red")
@@ -105,24 +122,24 @@ class Obstacle:
         self.radius = radius
         self.damage = damage
 
-    def collides_with(self, ball):
-        if (
-            self.x - self.width//2 < ball.pos[0] < self.x + self.width//2
-            and self.y - self.height // 2 < ball.pos[1] < self.y + self.height // 2
-        ):
-            return True
-        return False
+    # def collides_with(self, ball):
+    #     if (
+    #         self.x - self.width//2 < ball.pos[0] < self.x + self.width//2
+    #         and self.y - self.height // 2 < ball.pos[1] < self.y + self.height // 2
+    #     ):
+    #         return True
+    #     return False
 
     def draw(self):
         screen.draw.filled_circle((self.x, self.y), self.radius, self.color)
 
 
-# # Touch function to check for collision between ball and obstacles
-# def touch(ball, obstacle):
-#     dx = ball.pos[0] - obstacle.x
-#     dy = ball.pos[1] - obstacle.y
-#     distance = (dx * dx + dy * dy) ** 0.5
-#     return distance <= ball.radius + obstacle.radius
+# Touch function to check for collision between ball and obstacles
+def touch(ball, obstacle):
+    dx = ball.pos[0] - obstacle.x
+    dy = ball.pos[1] - obstacle.y
+    distance = (dx * dx + dy * dy) ** 0.5
+    return distance <= ball.radius + obstacle.radius
 
 # Global Variables
 ball = Ball()
@@ -132,12 +149,18 @@ rows = 3  # obstacle rows
 
 # Generate Obstacles
 for row in range(3):
-    for col in range(10):
-        x = col * 50 + 30
+    for col in range(17):
+        x = col * 35 + 20
         y = row * 40 + 60
         damage = random.randint(1, 3)
-        color = (173, 216, 230) if damage == 1 else (0, 0, 255) if damage == 2 else (0, 0, 139)
+        if damage == 1:
+            color = (173, 216, 230)
+        elif damage == 2:
+            color = (0, 0, 255)
+        elif damage == 3:
+            color = (0, 0, 139)
         obstacles.append(Obstacle(x, y, damage, color))
+
 
 def draw():
     screen.fill((198,168,104))
@@ -175,4 +198,21 @@ def update():
 def on_mouse_move(pos):
     paddle.update()
 
+
+# # Increase velocity of a ball every 10 seconds
+# def update_velocity():
+#     ball.vel[0] *= 1.5
+#     ball.vel[1] *= 1.5
+
+
+# def on_key_down(key):
+#     # Quit when the ESC key is pressed
+#     if key == keys.ESCAPE:
+#         exit()
+
+# clock.schedule_interval(update_velocity(), 10)
+
+# Set music and start the game
+music.play('bells')
+music.set_volume(0.3)
 pgzrun.go()
