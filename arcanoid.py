@@ -1,5 +1,6 @@
 import pgzrun
 import pygame
+import random
 
 # # Position ball at the center of the screen.
 # ball.pos = (WIDTH/2, HEIGHT/2)
@@ -7,13 +8,11 @@ import pygame
 # paddle.pos = (WIDTH/2, HEIGHT - paddle.height)
 # # Position obstacle randomly on the top of the screen.
 # obstacle.pos = (random.randint(0,WIDTH), 0)
-WIDTH = 600
-HEIGHT = 800
+WIDTH = 500
+HEIGHT = 500
 HEART_RADIUS = 20
 global lives
 lives = 3
-obstacles = []
-num_obstacles = 10
 
 
 # Paddle class
@@ -40,10 +39,10 @@ class Ball:
     def update(self):
         self.pos[0] += self.vel[0]
         self.pos[1] += self.vel[1]
-        for obstacle in obstacles:
-            if touch(self, obstacle):
-                obstacles.remove(obstacle)
-                self.vel[1] = -self.vel[1]
+        # for obstacle in obstacles:
+        #     if touch(self, obstacle):
+        #         obstacles.remove(obstacle)
+        #         self.vel[1] = -self.vel[1]
         self.collide()
 
     def collide(self):
@@ -57,12 +56,19 @@ class Ball:
             and self.pos[1] + self.radius >= paddle.pos[1]
         ):
             self.vel[1] = -self.vel[1]
+
         # Reset position if the ball goes off the bottom
-        if self.pos[1] - self.radius <= 0:
-            self.pos[0] = WIDTH // 2
-            self.pos[1] = HEIGHT // 2
-            global lives
-            lives -= 1
+        if self.pos[1] + self.radius >= HEIGHT or self.pos[1] - self.radius <= 0:
+            if self.pos[1] + self.radius >= HEIGHT:
+                global lives
+                lives = lives - 1
+            self.vel[1] = -self.vel[1]
+
+        # if self.pos[1] - self.radius <= 0:
+        #     self.pos[0] = WIDTH // 2
+        #     self.pos[1] = HEIGHT // 2
+        #     global lives
+        #     lives -= 1
 
     def draw(self):
         screen.draw.filled_circle(self.pos, self.radius, "black")
@@ -70,18 +76,31 @@ class Ball:
 
 # Obstacle class
 class Obstacle:
-    def __init__(self, pos=(30, 100), radius=20):
-        self.pos = list(pos)
+    def __init__(self, x, y, damage, color, radius=15):
+        self.x = x
+        self.y = y
+        self.width = 30
+        self.height = 30
+        self.color = color
         self.radius = radius
+        self.damage = damage
+
+    def collides_with(self, ball):
+        if (
+            self.x - self.width // 2 < ball.pos[0] < self.x + self.width // 2
+            and self.y - self.height // 2 < ball.pos[1] < self.y + self.height // 2
+        ):
+            return True
+        return False
 
     def draw(self):
-        screen.draw.filled_circle(self.pos, self.radius, "blue")
+        screen.draw.filled_circle((self.x, self.y), self.radius, self.color)
 
 
 # Touch function to check for collision between ball and obstacles
 def touch(ball, obstacle):
-    dx = ball.pos[0] - obstacle.pos[0]
-    dy = ball.pos[1] - obstacle.pos[1]
+    dx = ball.pos[0] - obstacle.x
+    dy = ball.pos[1] - obstacle.y
     distance = (dx * dx + dy * dy) ** 0.5
     return distance <= ball.radius + obstacle.radius
 
@@ -89,19 +108,30 @@ def touch(ball, obstacle):
 # Global Variables
 ball = Ball()
 paddle = Paddle()
+obstacles = []  # obstacles list
+rows = 3  # obstacle rows
 
 # Generate Obstacles
-for i in range(num_obstacles):
-    x_pos = WIDTH / 2 - 50 + i * 50
-    y_pos = 50
-    obstacle = Obstacle((x_pos, y_pos))
-    obstacles.append(obstacle)
+for row in range(3):
+    for col in range(10):
+        x = col * 50 + 30
+        y = row * 40 + 60
+        damage = random.randint(1, 3)
+        color = (
+            (173, 216, 230)
+            if damage == 1
+            else (0, 0, 255)
+            if damage == 2
+            else (0, 0, 139)
+        )
+        obstacles.append(Obstacle(x, y, damage, color))
 
 
 def draw():
-    screen.fill("white")
+    screen.fill((198, 168, 104))
     paddle.draw()
     ball.draw()
+
     for obstacle in obstacles:
         obstacle.draw()
     for i in range(lives):
@@ -112,20 +142,31 @@ def draw():
 def update():
     ball.update()
     paddle.update()
+    for obstacle in obstacles:
+        if (
+            obstacle.x - obstacle.radius < ball.pos[0] < obstacle.x + obstacle.radius
+            and obstacle.y - obstacle.radius
+            < ball.pos[1]
+            < obstacle.y + obstacle.radius
+        ):
+            obstacle.damage -= 1
+            if abs(ball.pos[0] - (obstacle.x - obstacle.radius)) < abs(
+                ball.pos[0] - (obstacle.x + obstacle.radius)
+            ):
+                ball.vel[0] = -ball.vel[0]
+            else:
+                ball.vel[1] = -ball.vel[1]
+            if obstacle.damage == 0:
+                obstacles.remove(obstacle)
+    # Check if the game is over.
+    if lives < 1:
+        screen.draw.text("GAME OVER", center=(WIDTH // 2, HEIGHT // 2), fontsize=60)
+    elif len(obstacles) == 0:
+        screen.draw.text("YOU WON", center=(WIDTH // 2, HEIGHT // 2), fontsize=60)
 
 
 def on_mouse_move(pos):
     paddle.update()
-
-
-# Game Control
-def on_frame():
-    if ball.pos[1] > screen.height - ball.radius:
-        if ball.pos[0] < paddle.pos[0] or ball.pos[0] > paddle.pos[0] + paddle.size[0]:
-            lives -= 1
-            ball.pos = [200, 300]
-    if lives <= 0:
-        game_over = True
 
 
 pgzrun.go()
