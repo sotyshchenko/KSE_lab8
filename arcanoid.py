@@ -8,11 +8,13 @@ import random
 # paddle.pos = (WIDTH/2, HEIGHT - paddle.height)
 # # Position obstacle randomly on the top of the screen.
 # obstacle.pos = (random.randint(0,WIDTH), 0)
+TITLE = "Christmas Arkanoid"
 WIDTH = 500
 HEIGHT = 500
 HEART_RADIUS = 20
 global lives
 lives = 3
+num_obstacles = 6
 
 
 # Paddle class
@@ -56,19 +58,15 @@ class Ball:
             and self.pos[1] + self.radius >= paddle.pos[1]
         ):
             self.vel[1] = -self.vel[1]
-
-        # Reset position if the ball goes off the bottom
+        # Bounce off ceiling
         if self.pos[1] + self.radius >= HEIGHT or self.pos[1] - self.radius <= 0:
+            # Reset position if the ball goes off the bottom
             if self.pos[1] + self.radius >= HEIGHT:
                 global lives
                 lives = lives - 1
+                self.pos[1] = paddle.pos[1] - self.radius
+                self.pos[0] = paddle.pos[0] + paddle.size[1] / 2
             self.vel[1] = -self.vel[1]
-
-        # if self.pos[1] - self.radius <= 0:
-        #     self.pos[0] = WIDTH // 2
-        #     self.pos[1] = HEIGHT // 2
-        #     global lives
-        #     lives -= 1
 
     def draw(self):
         screen.draw.filled_circle(self.pos, self.radius, "black")
@@ -87,7 +85,7 @@ class Obstacle:
 
     def collides_with(self, ball):
         if (
-            self.x - self.width // 2 < ball.pos[0] < self.x + self.width // 2
+            self.x - self.width//2 < ball.pos[0] < self.x + self.width//2
             and self.y - self.height // 2 < ball.pos[1] < self.y + self.height // 2
         ):
             return True
@@ -117,18 +115,12 @@ for row in range(3):
         x = col * 50 + 30
         y = row * 40 + 60
         damage = random.randint(1, 3)
-        color = (
-            (173, 216, 230)
-            if damage == 1
-            else (0, 0, 255)
-            if damage == 2
-            else (0, 0, 139)
-        )
+        color = (173, 216, 230) if damage == 1 else (0, 0, 255) if damage == 2 else (0, 0, 139)
         obstacles.append(Obstacle(x, y, damage, color))
 
 
 def draw():
-    screen.fill((198, 168, 104))
+    screen.fill((198,168,104))
     paddle.draw()
     ball.draw()
 
@@ -144,15 +136,11 @@ def update():
     paddle.update()
     for obstacle in obstacles:
         if (
-            obstacle.x - obstacle.radius < ball.pos[0] < obstacle.x + obstacle.radius
-            and obstacle.y - obstacle.radius
-            < ball.pos[1]
-            < obstacle.y + obstacle.radius
+            obstacle.x - obstacle.radius < ball.pos[0] < obstacle.x + obstacle.radius and
+            obstacle.y - obstacle.radius < ball.pos[1] < obstacle.y + obstacle.radius
         ):
             obstacle.damage -= 1
-            if abs(ball.pos[0] - (obstacle.x - obstacle.radius)) < abs(
-                ball.pos[0] - (obstacle.x + obstacle.radius)
-            ):
+            if abs(ball.pos[0] - (obstacle.x - obstacle.radius)) < abs(ball.pos[0] - (obstacle.x + obstacle.radius)):
                 ball.vel[0] = -ball.vel[0]
             else:
                 ball.vel[1] = -ball.vel[1]
@@ -167,6 +155,5 @@ def update():
 
 def on_mouse_move(pos):
     paddle.update()
-
 
 pgzrun.go()
