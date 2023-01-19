@@ -194,12 +194,29 @@ def draw():
         heart.draw()
         #x_pos = 20 + i * HEART_RADIUS * 2
         #screen.draw.filled_circle((x_pos, HEART_RADIUS), HEART_RADIUS, "pink")
+        screen.draw.filled_circle((x_pos, HEART_RADIUS), HEART_RADIUS, "pink")
     # Check if the game is over.
     if lives < 1:
         screen.draw.text("GAME OVER", center=(WIDTH // 2, HEIGHT // 2), fontsize=60)
 
     elif len(obstacles) == 0:
         screen.draw.text("YOU WON", center=(WIDTH // 2, HEIGHT // 2), fontsize=60)
+
+def update():
+    ball.update()
+    paddle.update()
+    # for obstacle in obstacles:
+    #     if (
+    #         obstacle.x - obstacle.radius < ball.pos[0] < obstacle.x + obstacle.radius and
+    #         obstacle.y - obstacle.radius < ball.pos[1] < obstacle.y + obstacle.radius
+    #     ):
+    #         obstacle.damage -= 1
+    #         if abs(ball.pos[0] - (obstacle.x - obstacle.radius)) < abs(ball.pos[0] - (obstacle.x + obstacle.radius)):
+    #             ball.vel[0] = -ball.vel[0]
+    #         else:
+    #             ball.vel[1] = -ball.vel[1]
+    #         if obstacle.damage == 0:
+    #             obstacles.remove(obstacle)
 
 
 
